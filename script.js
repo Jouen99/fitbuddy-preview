@@ -9,16 +9,93 @@ const activities = [
   { id: 'dodgeball', name: 'Illinois Club Dodgeball', category: 'Team sports', emoji: '🔴', color: 'pink', description: 'Play dodgeball with peers through practices and scrimmages.', detail: 'The club describes a friendly, competitive environment. Its profile mentions practices, weekly scrimmages, tournaments, and team bonding.', tags: ['Dodgeball', 'Teamwork'], url: 'https://one.illinois.edu/illinoisclubdodgeball/home/' }
 ];
 
+// Curated OneIllinois listings checked October 14, 2026. Each card links to its source.
+const events = [
+  { date:'2026-10-16', title:'Badminton for Fun practice', host:'Badminton For Fun', time:'6–8 PM', type:'Member practice', emoji:'🏸', url:'https://one.illinois.edu/badmintonforfun/rsvp_boot?id=480258' },
+  { date:'2026-10-17', title:'Going the Distance 5K', host:'AMSA Pre-Med', time:'7–11 AM', type:'Run or walk', emoji:'🏃', url:'https://one.illinois.edu/americanmedicalstudentassociationpremed/rsvp_boot?id=479807' },
+  { date:'2026-10-17', title:'Men’s Club Soccer vs DePaul', host:'Illinois Men’s Soccer Club', time:'1–4 PM', type:'Club match', emoji:'⚽', url:'https://one.illinois.edu/illinoismenssoccerclub/rsvp_boot?id=491223' },
+  { date:'2026-10-17', title:'Badminton for Fun practice', host:'Badminton For Fun', time:'6–8 PM', type:'Member practice', emoji:'🏸', url:'https://one.illinois.edu/badmintonforfun/rsvp_boot?id=480259' },
+  { date:'2026-10-18', title:'Men’s Club Soccer vs UIC', host:'Illinois Men’s Soccer Club', time:'12–3 PM', type:'Club match', emoji:'⚽', url:'https://one.illinois.edu/illinoismenssoccerclub/rsvp_boot?id=491226' },
+  { date:'2026-10-23', title:'Badminton for Fun practice', host:'Badminton For Fun', time:'6–8 PM', type:'Member practice', emoji:'🏸', url:'https://one.illinois.edu/badmintonforfun/rsvp_boot?id=480260' },
+  { date:'2026-10-24', title:'Badminton for Fun practice', host:'Badminton For Fun', time:'6–8 PM', type:'Member practice', emoji:'🏸', url:'https://one.illinois.edu/badmintonforfun/rsvp_boot?id=480261' },
+  { date:'2026-10-28', title:'Illini CHAARG workout', host:'Illini CHAARG', time:'6–7 PM', type:'Workout', emoji:'🧘', url:'https://one.illinois.edu/illinichaarg/rsvp_boot?id=480577' },
+  { date:'2026-10-28', title:'K-pop dance workshop', host:'Re: verie', time:'7–8 PM', type:'Dance', emoji:'💃', url:'https://one.illinois.edu/reverie/rsvp_boot?id=479330' },
+  { date:'2026-10-30', title:'Badminton for Fun practice', host:'Badminton For Fun', time:'6–8 PM', type:'Member practice', emoji:'🏸', url:'https://one.illinois.edu/badmintonforfun/rsvp_boot?id=480262' },
+  { date:'2026-10-31', title:'Badminton for Fun practice', host:'Badminton For Fun', time:'6–8 PM', type:'Member practice', emoji:'🏸', url:'https://one.illinois.edu/badmintonforfun/rsvp_boot?id=480263' }
+];
+
 const grid = document.querySelector('#activity-grid');
 const search = document.querySelector('#search');
 const savedOnly = document.querySelector('#saved-only');
 const dialog = document.querySelector('#details-dialog');
 let activeInterest = 'All';
+let activeView = 'calendar';
 let saved = new Set();
 try { saved = new Set(JSON.parse(localStorage.getItem('fitbuddy-uiuc-saved') || '[]')); } catch { saved = new Set(); }
 
+const todayKey = new Intl.DateTimeFormat('sv-SE', { timeZone:'America/Chicago', year:'numeric', month:'2-digit', day:'2-digit' }).format(new Date());
+const initialMonth = todayKey.slice(0, 7);
+let calendarMonth = initialMonth;
+let selectedDate = null;
+
 function saveFavorites() {
   try { localStorage.setItem('fitbuddy-uiuc-saved', JSON.stringify([...saved])); } catch { /* Browsing still works without storage. */ }
+}
+
+function monthName(monthKey) {
+  const [year, month] = monthKey.split('-').map(Number);
+  return new Intl.DateTimeFormat('en-US', { month:'long', year:'numeric', timeZone:'UTC' }).format(new Date(Date.UTC(year, month - 1, 1)));
+}
+
+function fullDate(dateKey) {
+  return new Intl.DateTimeFormat('en-US', { weekday:'long', month:'short', day:'numeric', timeZone:'UTC' }).format(new Date(dateKey + 'T12:00:00Z'));
+}
+
+function shiftMonth(monthKey, amount) {
+  const [year, month] = monthKey.split('-').map(Number);
+  const date = new Date(Date.UTC(year, month - 1 + amount, 1));
+  return date.toISOString().slice(0, 7);
+}
+
+function renderCalendar() {
+  const [year, month] = calendarMonth.split('-').map(Number);
+  const firstWeekday = new Date(Date.UTC(year, month - 1, 1)).getUTCDay();
+  const numberOfDays = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  const monthEvents = events.filter(event => event.date.startsWith(calendarMonth) && event.date >= todayKey);
+  document.querySelector('#calendar-month').textContent = monthName(calendarMonth);
+  document.querySelector('#previous-month').disabled = calendarMonth <= initialMonth;
+  document.querySelector('#calendar-grid').innerHTML =
+    Array.from({ length:firstWeekday }, () => '<span class="calendar-blank" aria-hidden="true"></span>').join('') +
+    Array.from({ length:numberOfDays }, (_, index) => {
+      const day = index + 1;
+      const key = calendarMonth + '-' + String(day).padStart(2, '0');
+      const count = monthEvents.filter(event => event.date === key).length;
+      const past = key < todayKey;
+      return `<button class="calendar-day ${count ? 'has-event' : ''} ${key === todayKey ? 'is-today' : ''} ${key === selectedDate ? 'is-selected' : ''}" type="button" data-date="${key}" ${past ? 'disabled' : ''} aria-label="${fullDate(key)}${count ? ', ' + count + ' event' + (count === 1 ? '' : 's') : ''}" aria-pressed="${key === selectedDate}"><span>${day}</span>${count ? '<i aria-hidden="true"></i>' : ''}</button>`;
+    }).join('');
+
+  const visible = monthEvents.filter(event => !selectedDate || event.date === selectedDate);
+  document.querySelector('#event-list-title').textContent = selectedDate ? fullDate(selectedDate) : 'Upcoming events';
+  document.querySelector('#show-all-events').hidden = !selectedDate;
+  document.querySelector('#event-list').innerHTML = visible.map(event => {
+    const [, monthNumber, day] = event.date.split('-');
+    const shortMonth = new Intl.DateTimeFormat('en-US', { month:'short', timeZone:'UTC' }).format(new Date(event.date + 'T12:00:00Z'));
+    return `<article class="event-card"><div class="event-date"><span>${shortMonth}</span><strong>${Number(day)}</strong></div><div class="event-card-main"><span class="event-type">${event.type}</span><h3>${event.title}</h3><p>${event.host}</p><span class="event-time">◷ ${event.time} CT</span></div><a class="event-link" href="${event.url}" target="_blank" rel="noopener noreferrer" aria-label="Open official listing for ${event.title} on ${fullDate(event.date)}">↗</a></article>`;
+  }).join('');
+  document.querySelector('#event-empty').hidden = visible.length !== 0;
+}
+
+function setView(view) {
+  activeView = view;
+  document.querySelector('[data-screen="calendar"]').hidden = view !== 'calendar';
+  document.querySelector('[data-screen="clubs"]').hidden = view === 'calendar';
+  savedOnly.checked = view === 'saved';
+  if (view === 'saved') {
+    search.value = '';
+    document.querySelector('[data-interest="All"]').click();
+  }
+  render();
+  document.querySelector('.app-content').scrollTo({ top:0, behavior:'smooth' });
 }
 
 function matches(activity) {
@@ -44,7 +121,7 @@ function render() {
   document.querySelector('#empty-state').hidden = visible.length !== 0;
   document.querySelector('#empty-title').textContent = savedOnly.checked ? 'No saved clubs yet' : 'No clubs found';
   document.querySelector('#empty-message').textContent = savedOnly.checked ? 'Tap the heart on a club to save it here.' : 'Try a different search or clear a filter.';
-  document.querySelectorAll('[data-view]').forEach(button => button.setAttribute('aria-pressed', String((button.dataset.view === 'saved') === savedOnly.checked)));
+  document.querySelectorAll('[data-view]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.view === activeView)));
 }
 
 function showDetails(activity) {
@@ -69,18 +146,20 @@ document.querySelectorAll('[data-interest]').forEach(button => button.addEventLi
 }));
 
 [search, savedOnly].forEach(control => control.addEventListener(control === search ? 'input' : 'change', render));
-document.querySelectorAll('[data-view]').forEach(button => button.addEventListener('click', () => {
-  savedOnly.checked = button.dataset.view === 'saved';
-  if (savedOnly.checked) {
-    search.value = '';
-    document.querySelector('[data-interest="All"]').click();
-  }
-  render();
-  document.querySelector('.app-content').scrollTo({ top: 0, behavior: 'smooth' });
-}));
+document.querySelectorAll('[data-view]').forEach(button => button.addEventListener('click', () => setView(button.dataset.view)));
+document.querySelector('#calendar-grid').addEventListener('click', event => {
+  const button = event.target.closest('[data-date]');
+  if (!button) return;
+  selectedDate = button.dataset.date;
+  renderCalendar();
+});
+document.querySelector('#show-all-events').addEventListener('click', () => { selectedDate = null; renderCalendar(); });
+document.querySelector('#previous-month').addEventListener('click', () => { calendarMonth = shiftMonth(calendarMonth, -1); selectedDate = null; renderCalendar(); });
+document.querySelector('#next-month').addEventListener('click', () => { calendarMonth = shiftMonth(calendarMonth, 1); selectedDate = null; renderCalendar(); });
 document.querySelector('#clear-filters').addEventListener('click', () => {
   search.value = ''; savedOnly.checked = false;
   document.querySelector('[data-interest="All"]').click();
+  setView('explore');
   search.focus();
 });
 
@@ -99,3 +178,4 @@ document.querySelector('.dialog-close').addEventListener('click', () => dialog.c
 dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
 document.addEventListener('keydown', event => { if (event.key === '/' && document.activeElement !== search && !dialog.open) { event.preventDefault(); search.focus(); } });
 render();
+renderCalendar();
