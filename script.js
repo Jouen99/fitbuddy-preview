@@ -42,6 +42,8 @@ function render() {
   document.querySelector('#results-title').textContent = savedOnly.checked ? 'Saved clubs' : 'Clubs for you';
   document.querySelector('#results-status').textContent = `${visible.length} ${visible.length === 1 ? 'club' : 'clubs'} shown`;
   document.querySelector('#empty-state').hidden = visible.length !== 0;
+  document.querySelector('#empty-title').textContent = savedOnly.checked ? 'No saved clubs yet' : 'No clubs found';
+  document.querySelector('#empty-message').textContent = savedOnly.checked ? 'Tap the heart on a club to save it here.' : 'Try a different search or clear a filter.';
   document.querySelectorAll('[data-view]').forEach(button => button.setAttribute('aria-pressed', String((button.dataset.view === 'saved') === savedOnly.checked)));
 }
 
@@ -53,7 +55,7 @@ function showDetails(activity) {
     <p class="demo-note">Meeting times and joining details may change. Check the official club page before you go.</p>
     <a class="primary-button official-link" href="${activity.url}" target="_blank" rel="noopener noreferrer">Open on OneIllinois ↗</a>
     <button class="secondary-button dialog-save" type="button" data-save="${activity.id}">${saved.has(activity.id) ? 'Saved ♥' : 'Save activity ♡'}</button>`;
-  dialog.showModal();
+  if (!dialog.open) dialog.showModal();
 }
 
 document.querySelectorAll('[data-interest]').forEach(button => button.addEventListener('click', () => {
@@ -74,7 +76,7 @@ document.querySelectorAll('[data-view]').forEach(button => button.addEventListen
     document.querySelector('[data-interest="All"]').click();
   }
   render();
-  document.querySelector('#explore').scrollIntoView({ behavior: 'smooth' });
+  document.querySelector('.app-content').scrollTo({ top: 0, behavior: 'smooth' });
 }));
 document.querySelector('#clear-filters').addEventListener('click', () => {
   search.value = ''; savedOnly.checked = false;
