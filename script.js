@@ -18,8 +18,8 @@ function escapeHTML(value) {
   return String(value).replace(/[&<>"']/g, character => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[character]));
 }
 
-// Curated OneIllinois listings checked October 14, 2026. Each card links to its source.
-const events = [
+// Curated listings remain available alongside the wider public OneIllinois feed.
+const curatedEvents = [
   { date:'2026-10-16', title:'Badminton for Fun practice', host:'Badminton For Fun', time:'6–8 PM', start:'18:00', end:'20:00', type:'Member practice', emoji:'🏸', url:'https://one.illinois.edu/badmintonforfun/rsvp_boot?id=480258' },
   { date:'2026-10-17', title:'Going the Distance 5K', host:'AMSA Pre-Med', time:'7–11 AM', start:'07:00', end:'11:00', type:'Run or walk', emoji:'🏃', url:'https://one.illinois.edu/americanmedicalstudentassociationpremed/rsvp_boot?id=479807' },
   { date:'2026-10-17', title:'Men’s Club Soccer vs DePaul', host:'Illinois Men’s Soccer Club', time:'1–4 PM', start:'13:00', end:'16:00', type:'Club match', emoji:'⚽', url:'https://one.illinois.edu/illinoismenssoccerclub/rsvp_boot?id=491223' },
@@ -32,6 +32,10 @@ const events = [
   { date:'2026-10-30', title:'Badminton for Fun practice', host:'Badminton For Fun', time:'6–8 PM', start:'18:00', end:'20:00', type:'Member practice', emoji:'🏸', url:'https://one.illinois.edu/badmintonforfun/rsvp_boot?id=480262' },
   { date:'2026-10-31', title:'Badminton for Fun practice', host:'Badminton For Fun', time:'6–8 PM', start:'18:00', end:'20:00', type:'Member practice', emoji:'🏸', url:'https://one.illinois.edu/badmintonforfun/rsvp_boot?id=480263' }
 ];
+const publicEvents = window.fitBuddyPublicEvents?.events || [];
+const eventKey = event => new URL(event.url).searchParams.get('id') || event.url;
+const events = [...new Map([...curatedEvents, ...publicEvents].map(event => [eventKey(event), event])).values()]
+  .sort((a, b) => (a.date + a.start + a.title).localeCompare(b.date + b.start + b.title));
 
 const grid = document.querySelector('#activity-grid');
 const search = document.querySelector('#search');
@@ -47,10 +51,12 @@ const todayKey = new Intl.DateTimeFormat('sv-SE', { timeZone:'America/Chicago', 
 const initialMonth = todayKey.slice(0, 7);
 let calendarMonth = initialMonth;
 let selectedDate = null;
+let eventLimit = 20;
 let busyBlocks = [];
 try { busyBlocks = JSON.parse(localStorage.getItem('fitbuddy-busy-times') || '[]').filter(block => block && block.date && block.start && block.end); } catch { busyBlocks = []; }
 
 function eventConflicts(event) {
+  if (event.time === 'All day') return busyBlocks.some(block => block.date === event.date);
   return busyBlocks.some(block => block.date === event.date && event.start < block.end && event.end > block.start);
 }
 
@@ -107,12 +113,15 @@ function renderCalendar() {
   const visible = monthEvents.filter(event => (!selectedDate || event.date === selectedDate) && (!document.querySelector('#fit-only').checked || !eventConflicts(event)));
   document.querySelector('#event-list-title').textContent = selectedDate ? fullDate(selectedDate) : 'Upcoming events';
   document.querySelector('#show-all-events').hidden = !selectedDate;
-  document.querySelector('#event-list').innerHTML = visible.map(event => {
+  document.querySelector('#event-list').innerHTML = visible.slice(0, selectedDate ? undefined : eventLimit).map(event => {
     const day = event.date.slice(-2);
     const shortMonth = new Intl.DateTimeFormat('en-US', { month:'short', timeZone:'UTC' }).format(new Date(event.date + 'T12:00:00Z'));
     const fitLabel = busyBlocks.length ? (eventConflicts(event) ? '<span class="event-fit conflict">Time conflict</span>' : '<span class="event-fit available">Fits your busy times</span>') : '';
-    return `<article class="event-card"><div class="event-date"><span>${shortMonth}</span><strong>${Number(day)}</strong></div><div class="event-card-main"><span class="event-type">${escapeHTML(event.type)}</span><h3>${escapeHTML(event.title)}</h3><p>${escapeHTML(event.host)}</p><span class="event-time">◷ ${escapeHTML(event.time)} CT</span>${fitLabel}<a class="event-join" href="${event.url}" target="_blank" rel="noopener noreferrer" aria-label="View and join ${escapeHTML(event.title)} on OneIllinois">View &amp; join on OneIllinois ↗</a></div></article>`;
+    return `<article class="event-card"><div class="event-date"><span>${shortMonth}</span><strong>${Number(day)}</strong></div><div class="event-card-main"><span class="event-type">${escapeHTML(event.type)}</span><h3>${escapeHTML(event.title)}</h3><p>${escapeHTML(event.host)}</p><span class="event-time">◷ ${escapeHTML(event.time)}${event.time === 'All day' ? '' : ' CT'}</span>${fitLabel}<a class="event-join" href="${event.url}" target="_blank" rel="noopener noreferrer" aria-label="View and join ${escapeHTML(event.title)} on OneIllinois">View &amp; join on OneIllinois ↗</a></div></article>`;
   }).join('');
+  const moreEvents = document.querySelector('#show-more-events');
+  moreEvents.hidden = !!selectedDate || visible.length <= eventLimit;
+  moreEvents.textContent = `Show more events (${visible.length - eventLimit} left)`;
   document.querySelector('#event-empty').hidden = visible.length !== 0;
   document.querySelector('#event-empty h3').textContent = document.querySelector('#fit-only').checked && monthEvents.length ? 'No events fit this schedule' : 'No events shown';
   document.querySelector('#event-empty p').textContent = document.querySelector('#fit-only').checked && monthEvents.length ? 'Try a different date or turn off the schedule filter.' : 'Browse OneIllinois for the latest activities.';
@@ -231,6 +240,7 @@ document.querySelector('#calendar-grid').addEventListener('click', event => {
   renderCalendar();
 });
 document.querySelector('#show-all-events').addEventListener('click', () => { selectedDate = null; renderCalendar(); });
+document.querySelector('#show-more-events').addEventListener('click', () => { eventLimit += 20; renderCalendar(); });
 document.querySelector('#previous-month').addEventListener('click', () => { calendarMonth = shiftMonth(calendarMonth, -1); selectedDate = null; renderCalendar(); });
 document.querySelector('#next-month').addEventListener('click', () => { calendarMonth = shiftMonth(calendarMonth, 1); selectedDate = null; renderCalendar(); });
 document.querySelector('#clear-filters').addEventListener('click', () => {
