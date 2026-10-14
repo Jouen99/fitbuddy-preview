@@ -20,6 +20,7 @@
         <a href="#explore">Explore activities</a>
         <a href="#how-it-works">How it works</a>
       </nav>
+      <span class="campus-pill">UIUC</span>
       <a class="header-cta" href="#explore">Find an activity <span aria-hidden="true">↗</span></a>
     </div>
   </header>
@@ -67,7 +68,7 @@
           <div class="select-row"><label class="saved-toggle"><input id="saved-only" type="checkbox"><span>Show saved only</span></label><span class="source-hint">Club profiles are from OneIllinois. Check each club page for current meeting details.</span></div>
         </div>
 
-        <div class="results-heading"><h3>Clubs for you <span id="result-count"></span></h3><span id="results-status" aria-live="polite"></span></div>
+        <div class="results-heading"><h3><span id="results-title">Clubs for you</span> <span id="result-count"></span></h3><span id="results-status" aria-live="polite"></span></div>
         <div class="activity-grid" id="activity-grid"></div>
         <div class="empty-state" id="empty-state" hidden><div>🔎</div><h3>No clubs found</h3><p>Try a different search or clear a filter.</p><button class="text-button" id="clear-filters" type="button">Show all clubs →</button></div>
       </div>
@@ -79,6 +80,11 @@
   </main>
 
   <footer><div class="container footer-inner"><span class="brand"><span class="brand-mark" aria-hidden="true">✳</span><span>fitbuddy<span class="brand-dot">.</span></span></span><p>A little more movement. A lot more connection.</p><span>Made for curious students ✳</span></div></footer>
+
+  <nav class="mobile-tabbar" aria-label="FitBuddy views">
+    <button type="button" data-view="explore" aria-pressed="true"><span aria-hidden="true">⌕</span>Explore</button>
+    <button type="button" data-view="saved" aria-pressed="false"><span aria-hidden="true">♡</span>Saved</button>
+  </nav>
 
   <dialog id="details-dialog" aria-labelledby="dialog-title"><button class="dialog-close" type="button" aria-label="Close details">×</button><div id="dialog-content"></div></dialog>
 </body>

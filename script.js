@@ -39,8 +39,10 @@ function render() {
       <div class="card-bottom-row"><span>Listed on OneIllinois</span><button class="details-button" type="button" data-details="${activity.id}" aria-label="View details for ${activity.name}">↗</button></div></div>
     </article>`).join('');
   document.querySelector('#result-count').textContent = visible.length;
+  document.querySelector('#results-title').textContent = savedOnly.checked ? 'Saved clubs' : 'Clubs for you';
   document.querySelector('#results-status').textContent = `${visible.length} ${visible.length === 1 ? 'club' : 'clubs'} shown`;
   document.querySelector('#empty-state').hidden = visible.length !== 0;
+  document.querySelectorAll('[data-view]').forEach(button => button.setAttribute('aria-pressed', String((button.dataset.view === 'saved') === savedOnly.checked)));
 }
 
 function showDetails(activity) {
@@ -65,6 +67,15 @@ document.querySelectorAll('[data-interest]').forEach(button => button.addEventLi
 }));
 
 [search, savedOnly].forEach(control => control.addEventListener(control === search ? 'input' : 'change', render));
+document.querySelectorAll('[data-view]').forEach(button => button.addEventListener('click', () => {
+  savedOnly.checked = button.dataset.view === 'saved';
+  if (savedOnly.checked) {
+    search.value = '';
+    document.querySelector('[data-interest="All"]').click();
+  }
+  render();
+  document.querySelector('#explore').scrollIntoView({ behavior: 'smooth' });
+}));
 document.querySelector('#clear-filters').addEventListener('click', () => {
   search.value = ''; savedOnly.checked = false;
   document.querySelector('[data-interest="All"]').click();
