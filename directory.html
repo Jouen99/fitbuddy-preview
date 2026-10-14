@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f8faf5">
+  <meta name="description" content="FitBuddy helps UIUC students discover sport and fitness clubs.">
+  <title>FitBuddy — Discover UIUC clubs</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=directory-1">
+  <script src="club-directory.js?v=directory-1" defer></script>
+  <script src="script.js?v=directory-1" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <a class="brand" href="directory.html" aria-label="FitBuddy home"><span class="brand-mark" aria-hidden="true">✳</span><span>fitbuddy<span class="brand-dot">.</span></span></a>
+      <span class="campus-pill">UIUC</span>
+    </header>
+
+    <main class="app-content">
+      <section class="calendar-screen" data-screen="calendar" aria-labelledby="calendar-title">
+        <div class="calendar-intro">
+          <span class="eyebrow">UPCOMING AT UIUC</span>
+          <h1 id="calendar-title">Find your next <em>event.</em></h1>
+          <p>See what's happening, pick a day, and get the details.</p>
+        </div>
+        <div class="calendar-body">
+          <div class="calendar-panel">
+            <div class="calendar-toolbar"><button id="previous-month" type="button" aria-label="Previous month">‹</button><h2 id="calendar-month"></h2><button id="next-month" type="button" aria-label="Next month">›</button></div>
+            <div class="calendar-weekdays" aria-hidden="true"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div>
+            <div class="calendar-grid" id="calendar-grid" aria-label="Event calendar"></div>
+            <p class="calendar-key"><span class="calendar-key-dot"></span> Day with an event</p>
+          </div>
+          <div class="availability-row"><button id="add-busy-time" type="button">+ Add a busy time</button><label><input id="fit-only" type="checkbox"> Only events that fit</label></div>
+          <p class="availability-note" id="availability-note">Add class or work times to check for overlaps.</p>
+          <div class="event-heading"><h2 id="event-list-title">Upcoming events</h2><button id="show-all-events" type="button" hidden>Show all</button></div>
+          <div class="event-list" id="event-list"></div>
+          <div class="event-empty" id="event-empty" hidden><span aria-hidden="true">📅</span><h3>No events shown</h3><p>Browse OneIllinois for the latest activities.</p><a href="https://one.illinois.edu/events" target="_blank" rel="noopener noreferrer">Open OneIllinois events ↗</a></div>
+          <p class="calendar-source">Selected events checked October 14, 2026. Schedule checks use only busy times you add here. Joining happens on OneIllinois and may require sign-in. <a href="https://one.illinois.edu/events" target="_blank" rel="noopener noreferrer">See all UIUC events ↗</a></p>
+        </div>
+      </section>
+
+      <div data-screen="clubs" hidden>
+      <section class="welcome" aria-labelledby="welcome-title">
+        <span class="eyebrow">THE WHOLE UIUC DIRECTORY</span>
+        <h1 id="welcome-title">Find your<br><em>people.</em></h1>
+        <p>Search every public OneIllinois group, from sports to arts and everything between.</p>
+      </section>
+
+      <section class="discovery" aria-label="Find clubs">
+        <label class="search-label" for="search">Find a club</label>
+        <div class="search-box"><span class="search-icon" aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Search all UIUC clubs" autocomplete="off"></div>
+
+        <div class="filter-row" role="group" aria-label="Filter by interest">
+          <button class="filter-chip active" type="button" data-interest="All" aria-pressed="true">All groups</button>
+          <button class="filter-chip" type="button" data-interest="Sports" aria-pressed="false">⚽ Sports</button>
+          <button class="filter-chip" type="button" data-interest="Wellness" aria-pressed="false">💪 Wellness</button>
+          <button class="filter-chip" type="button" data-interest="Arts" aria-pressed="false">🎨 Arts</button>
+          <button class="filter-chip" type="button" data-interest="Social" aria-pressed="false">✳ Social</button>
+        </div>
+        <input id="saved-only" type="checkbox" hidden>
+
+        <div class="results-heading"><h2><span id="results-title">Clubs for you</span> <span id="result-count"></span></h2><span id="results-status" aria-live="polite"></span></div>
+        <div class="activity-grid" id="activity-grid"></div>
+        <button class="load-more" id="load-more" type="button" hidden>Show more clubs</button>
+        <div class="empty-state" id="empty-state" hidden><div aria-hidden="true">🔎</div><h3 id="empty-title">No clubs found</h3><p id="empty-message">Try a different search or clear a filter.</p><button class="text-button" id="clear-filters" type="button">Show all clubs →</button></div>
+      </section>
+
+      <p class="source-note">Directory snapshot from October 14, 2026. Check <a href="https://one.illinois.edu/club_signup" target="_blank" rel="noopener noreferrer">OneIllinois ↗</a> for current membership and event details.</p>
+      </div>
+    </main>
+
+    <nav class="app-tabbar" aria-label="FitBuddy views">
+      <button type="button" data-view="calendar" aria-pressed="true"><span aria-hidden="true">▦</span>Calendar</button>
+      <button type="button" data-view="explore" aria-pressed="false"><span aria-hidden="true">⌕</span>Clubs</button>
+      <button type="button" data-view="saved" aria-pressed="false"><span aria-hidden="true">♡</span>Saved</button>
+    </nav>
+  </div>
+
+  <dialog id="details-dialog" aria-labelledby="dialog-title"><button class="dialog-close" type="button" aria-label="Close details">×</button><div id="dialog-content"></div></dialog>
+  <dialog id="availability-dialog" aria-labelledby="availability-title">
+    <button class="availability-close dialog-close" type="button" aria-label="Close schedule">×</button>
+    <div class="availability-dialog-body">
+      <span class="eyebrow">MY SCHEDULE</span>
+      <h2 id="availability-title">When are you busy?</h2>
+      <p>Add class, work, or other busy times. They stay in this browser.</p>
+      <form id="busy-form">
+        <label>Date <input id="busy-date" type="date" required></label>
+        <div class="busy-time-row"><label>From <input id="busy-start" type="time" required></label><label>To <input id="busy-end" type="time" required></label></div>
+        <label>What is it? <input id="busy-label" type="text" maxlength="40" placeholder="Class, work, practice…"></label>
+        <p class="busy-error" id="busy-error" aria-live="polite"></p>
+        <button class="primary-button" type="submit">Save busy time</button>
+      </form>
+      <h3>Saved busy times</h3>
+      <div id="busy-list"></div>
+    </div>
+  </dialog>
+</body>
+</html>
