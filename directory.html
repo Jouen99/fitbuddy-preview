@@ -9,10 +9,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=directory-1">
+  <link rel="stylesheet" href="styles.css?v=survey-1">
   <script src="club-directory.js?v=directory-1" defer></script>
-  <script src="public-events.js?v=public-events-1" defer></script>
-  <script src="script.js?v=public-events-1" defer></script>
+  <script src="public-events.js?v=survey-1" defer></script>
+  <script src="script.js?v=survey-1" defer></script>
 </head>
 <body>
   <div class="app-shell">
@@ -22,13 +22,49 @@
     </header>
 
     <main class="app-content">
+      <section class="survey-screen" id="survey-screen" aria-labelledby="survey-title" hidden>
+        <span class="eyebrow">A QUICK START</span>
+        <h1 id="survey-title">Find activities <em>for you.</em></h1>
+        <p class="survey-lead">Pick what sounds fun and when you are usually free. FitBuddy will suggest public UIUC events you can explore.</p>
+        <form id="survey-form">
+          <fieldset>
+            <legend><span>1</span> What would you like to try?</legend>
+            <p>Choose as many as you like.</p>
+            <div class="survey-options survey-interests">
+              <label><input type="checkbox" name="interest" value="team"><span>⚽ Team sports</span></label>
+              <label><input type="checkbox" name="interest" value="outdoors"><span>🥾 Outdoors</span></label>
+              <label><input type="checkbox" name="interest" value="fitness"><span>💪 Workouts</span></label>
+              <label><input type="checkbox" name="interest" value="dance"><span>💃 Dance</span></label>
+              <label><input type="checkbox" name="interest" value="wellness"><span>🧘 Wellness</span></label>
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend><span>2</span> When are you usually free?</legend>
+            <div class="survey-options survey-availability">
+              <label><input type="radio" name="availability" value="weekday"><span>Weekday evenings</span></label>
+              <label><input type="radio" name="availability" value="weekend"><span>Weekends</span></label>
+              <label><input type="radio" name="availability" value="any"><span>Any time</span></label>
+            </div>
+          </fieldset>
+          <p class="survey-error" id="survey-error" role="alert"></p>
+          <button class="primary-button survey-submit" type="submit">Show my activities →</button>
+          <button class="survey-skip" id="survey-skip" type="button">Skip for now</button>
+        </form>
+        <p class="survey-privacy">Your answers stay in this browser. You can change them any time.</p>
+      </section>
       <section class="calendar-screen" data-screen="calendar" aria-labelledby="calendar-title">
         <div class="calendar-intro">
           <span class="eyebrow">UPCOMING AT UIUC</span>
           <h1 id="calendar-title">Find your next <em>event.</em></h1>
           <p>See what's happening, pick a day, and get the details.</p>
+          <button class="preferences-button" id="edit-preferences" type="button">Choose my interests ↗</button>
         </div>
         <div class="calendar-body">
+          <section class="recommendations" id="recommendations" aria-labelledby="recommendations-title" hidden>
+            <div class="recommendations-heading"><div><span class="eyebrow">BASED ON YOUR ANSWERS</span><h2 id="recommendations-title">Picked for you</h2></div><button id="change-preferences" type="button">Edit</button></div>
+            <p id="recommendations-note"></p>
+            <div class="recommendation-list" id="recommendation-list"></div>
+          </section>
           <div class="calendar-panel">
             <div class="calendar-toolbar"><button id="previous-month" type="button" aria-label="Previous month">‹</button><h2 id="calendar-month"></h2><button id="next-month" type="button" aria-label="Next month">›</button></div>
             <div class="calendar-weekdays" aria-hidden="true"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div>
@@ -41,7 +77,7 @@
           <div class="event-list" id="event-list"></div>
           <button class="load-more" id="show-more-events" type="button" hidden>Show more events</button>
           <div class="event-empty" id="event-empty" hidden><span aria-hidden="true">📅</span><h3>No events shown</h3><p>Browse OneIllinois for the latest activities.</p><a href="https://one.illinois.edu/events" target="_blank" rel="noopener noreferrer">Open OneIllinois events ↗</a></div>
-          <p class="calendar-source">Public club events from <a href="https://one.illinois.edu/events" target="_blank" rel="noopener noreferrer">OneIllinois ↗</a>, updated October 14, 2026. Some trips may be shared only with members. <a href="https://one.illinois.edu/outdooradventureclub/events/" target="_blank" rel="noopener noreferrer">Outdoor Adventure Club events ↗</a> Schedule checks use the busy times you add here. Joining may require sign-in.</p>
+          <p class="calendar-source">Public club events from <a href="https://one.illinois.edu/events" target="_blank" rel="noopener noreferrer">OneIllinois ↗</a>, updated October 16, 2026. Some trips may be shared only with members. <a href="https://one.illinois.edu/outdooradventureclub/events/" target="_blank" rel="noopener noreferrer">Outdoor Adventure Club events ↗</a> Schedule checks use the busy times you add here. Joining may require sign-in.</p>
         </div>
       </section>
 

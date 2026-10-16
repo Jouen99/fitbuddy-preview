@@ -37,6 +37,18 @@ const eventKey = event => new URL(event.url).searchParams.get('id') || event.url
 const events = [...new Map([...curatedEvents, ...publicEvents].map(event => [eventKey(event), event])).values()]
   .sort((a, b) => (a.date + a.start + a.title).localeCompare(b.date + b.start + b.title));
 
+const interestOptions = {
+  team: { label:'Team sports', pattern:/\b(soccer|basketball|volleyball|football|ultimate|rugby|hockey|lacrosse|tennis|badminton|pickleball|softball|baseball|dodgeball)\b/i },
+  outdoors: { label:'Outdoors', pattern:/\b(outdoor|adventure|hiking|hike|camping|climb|cycling|bike|trail|kayak|canoe|running|run|cross country)\b/i },
+  fitness: { label:'Workouts', pattern:/\b(fitness|workout|exercise|strength|lifting|gym|chaarg|pilates|yoga|martial arts|boxing|zumba)\b/i },
+  dance: { label:'Dance', pattern:/\b(dance|dancesport|swing|ballet|hip.?hop|k.?pop|reverie|zindaa)\b/i },
+  wellness: { label:'Wellness', pattern:/\b(wellness|mental health|meditation|mindful|yoga|nutrition|healthy living|self.care)\b/i }
+};
+const surveyStorageKey = 'fitbuddy-preferences-v1';
+let surveyState = null;
+try { surveyState = JSON.parse(localStorage.getItem(surveyStorageKey) || 'null'); } catch { surveyState = null; }
+let profile = surveyState && Array.isArray(surveyState.interests) && surveyState.interests.length && ['weekday','weekend','any'].includes(surveyState.availability) ? surveyState : null;
+
 const grid = document.querySelector('#activity-grid');
 const search = document.querySelector('#search');
 const savedOnly = document.querySelector('#saved-only');
@@ -48,6 +60,7 @@ let saved = new Set();
 try { saved = new Set(JSON.parse(localStorage.getItem('fitbuddy-uiuc-saved') || '[]')); } catch { saved = new Set(); }
 
 const todayKey = new Intl.DateTimeFormat('sv-SE', { timeZone:'America/Chicago', year:'numeric', month:'2-digit', day:'2-digit' }).format(new Date());
+const nowTime = new Intl.DateTimeFormat('en-GB', { timeZone:'America/Chicago', hour:'2-digit', minute:'2-digit', hourCycle:'h23' }).format(new Date());
 const initialMonth = todayKey.slice(0, 7);
 let calendarMonth = initialMonth;
 let selectedDate = null;
@@ -58,6 +71,78 @@ try { busyBlocks = JSON.parse(localStorage.getItem('fitbuddy-busy-times') || '[]
 function eventConflicts(event) {
   if (event.time === 'All day') return busyBlocks.some(block => block.date === event.date);
   return busyBlocks.some(block => block.date === event.date && event.start < block.end && event.end > block.start);
+}
+
+function availableFor(event, availability) {
+  if (availability === 'any') return true;
+  const day = new Date(event.date + 'T12:00:00Z').getUTCDay();
+  if (availability === 'weekend') return day === 0 || day === 6;
+  return day >= 1 && day <= 5 && event.time !== 'All day' && event.start >= '16:00';
+}
+
+function matchingInterests(text) {
+  return profile.interests.filter(key => interestOptions[key]?.pattern.test(text));
+}
+
+function isUpcoming(event) {
+  return event.date > todayKey || (event.date === todayKey && (event.time === 'All day' || event.end > nowTime));
+}
+
+function renderRecommendations() {
+  const section = document.querySelector('#recommendations');
+  document.querySelector('#edit-preferences').textContent = profile ? 'Edit my interests ↗' : 'Choose my interests ↗';
+  section.hidden = !profile;
+  if (!profile) return;
+  const matches = events.filter(event => isUpcoming(event) && !eventConflicts(event) && availableFor(event, profile.availability))
+    .map(event => ({ event, interests:matchingInterests(`${event.title} ${event.host} ${event.type}`) }))
+    .filter(item => item.interests.length)
+    .sort((a, b) => (a.event.date + a.event.start).localeCompare(b.event.date + b.event.start) || b.interests.length - a.interests.length);
+  const selected = [];
+  const hosts = new Set();
+  for (const item of matches) {
+    if (hosts.has(item.event.host)) continue;
+    selected.push(item);
+    hosts.add(item.event.host);
+    if (selected.length === 4) break;
+  }
+  for (const item of matches) {
+    if (selected.length === 4) break;
+    if (!selected.includes(item)) selected.push(item);
+  }
+  const note = document.querySelector('#recommendations-note');
+  note.textContent = selected.length
+    ? 'Public events that match your interests and usual free time. If you added busy times, those are checked too.'
+    : 'No public events match those choices right now. Explore these clubs or change your answers.';
+  const cards = selected.map(({ event, interests }) => {
+    const why = interests.map(key => interestOptions[key].label).join(' + ');
+    return `<article class="recommendation-card"><span class="recommendation-why">${escapeHTML(why)}</span><h3>${escapeHTML(event.title)}</h3><p>${escapeHTML(event.host)} · ${escapeHTML(fullDate(event.date))}</p><p>${escapeHTML(event.time)}${event.time === 'All day' ? '' : ' CT'}</p><a href="${event.url}" target="_blank" rel="noopener noreferrer">View &amp; join on OneIllinois ↗</a></article>`;
+  }).join('');
+  const clubs = activities.filter(activity => matchingInterests(`${activity.name} ${activity.description}`).length)
+    .sort((a, b) => Number(hosts.has(b.name)) - Number(hosts.has(a.name)) || a.name.localeCompare(b.name))
+    .slice(0, 3);
+  const clubLinks = clubs.length ? `<div class="recommended-clubs"><h3>Clubs to explore</h3>${clubs.map(activity => `<a href="${activity.url}" target="_blank" rel="noopener noreferrer">${escapeHTML(activity.name)} ↗</a>`).join('')}</div>` : '';
+  document.querySelector('#recommendation-list').innerHTML = cards + clubLinks;
+}
+
+function openSurvey() {
+  const form = document.querySelector('#survey-form');
+  form.reset();
+  if (profile) {
+    profile.interests.forEach(key => { const input = form.querySelector(`input[name="interest"][value="${key}"]`); if (input) input.checked = true; });
+    form.querySelector(`input[name="availability"][value="${profile.availability}"]`).checked = true;
+  }
+  document.querySelector('#survey-error').textContent = '';
+  document.querySelector('#survey-screen').hidden = false;
+  document.querySelectorAll('[data-screen]').forEach(screen => { screen.hidden = true; });
+  document.querySelector('.app-tabbar').hidden = true;
+  document.querySelector('.app-content').scrollTop = 0;
+}
+
+function closeSurvey() {
+  document.querySelector('#survey-screen').hidden = true;
+  document.querySelector('.app-tabbar').hidden = false;
+  renderRecommendations();
+  setView('calendar');
 }
 
 function saveBusyBlocks() {
@@ -97,7 +182,7 @@ function renderCalendar() {
   const [year, month] = calendarMonth.split('-').map(Number);
   const firstWeekday = new Date(Date.UTC(year, month - 1, 1)).getUTCDay();
   const numberOfDays = new Date(Date.UTC(year, month, 0)).getUTCDate();
-  const monthEvents = events.filter(event => event.date.startsWith(calendarMonth) && event.date >= todayKey);
+  const monthEvents = events.filter(event => event.date.startsWith(calendarMonth) && isUpcoming(event));
   document.querySelector('#calendar-month').textContent = monthName(calendarMonth);
   document.querySelector('#previous-month').disabled = calendarMonth <= initialMonth;
   document.querySelector('#calendar-grid').innerHTML =
@@ -199,6 +284,27 @@ document.querySelectorAll('[data-interest]').forEach(button => button.addEventLi
 search.addEventListener('input', () => { displayLimit = 30; render(); });
 document.querySelector('#load-more').addEventListener('click', () => { displayLimit += 30; render(); });
 document.querySelectorAll('[data-view]').forEach(button => button.addEventListener('click', () => setView(button.dataset.view)));
+document.querySelectorAll('#edit-preferences,#change-preferences').forEach(button => button.addEventListener('click', openSurvey));
+document.querySelector('#survey-form').addEventListener('submit', event => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const interests = [...form.querySelectorAll('input[name="interest"]:checked')].map(input => input.value);
+  const availability = form.querySelector('input[name="availability"]:checked')?.value;
+  if (!interests.length || !availability) {
+    document.querySelector('#survey-error').textContent = 'Choose at least one activity and a time that works for you.';
+    return;
+  }
+  profile = { interests, availability };
+  try { localStorage.setItem(surveyStorageKey, JSON.stringify(profile)); } catch { /* Recommendations still work for this visit. */ }
+  closeSurvey();
+});
+document.querySelector('#survey-skip').addEventListener('click', () => {
+  if (!profile) {
+    surveyState = { skipped:true };
+    try { localStorage.setItem(surveyStorageKey, JSON.stringify(surveyState)); } catch { /* The survey may appear again next visit. */ }
+  }
+  closeSurvey();
+});
 document.querySelector('#fit-only').addEventListener('change', renderCalendar);
 const availabilityDialog = document.querySelector('#availability-dialog');
 const busyDate = document.querySelector('#busy-date');
@@ -221,6 +327,7 @@ document.querySelector('#busy-form').addEventListener('submit', event => {
   saveBusyBlocks();
   renderBusyBlocks();
   renderCalendar();
+  renderRecommendations();
   error.textContent = '';
   event.target.reset();
   busyDate.value = todayKey;
@@ -232,6 +339,7 @@ document.querySelector('#busy-list').addEventListener('click', event => {
   saveBusyBlocks();
   renderBusyBlocks();
   renderCalendar();
+  renderRecommendations();
 });
 document.querySelector('#calendar-grid').addEventListener('click', event => {
   const button = event.target.closest('[data-date]');
@@ -267,3 +375,5 @@ document.addEventListener('keydown', event => { if (event.key === '/' && documen
 render();
 renderCalendar();
 renderBusyBlocks();
+renderRecommendations();
+if (!surveyState || (!profile && !surveyState.skipped)) openSurvey();

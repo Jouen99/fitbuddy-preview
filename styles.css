@@ -16,7 +16,41 @@ h1,h2,h3,h4 { font-family:Outfit,sans-serif; }
 .campus-pill { padding:7px 11px; border-radius:99px; background:#eaf2df; color:var(--green); font-size:11px; font-weight:800; letter-spacing:.6px; }
 .app-content { flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:none; }
 .app-content::-webkit-scrollbar,.filter-row::-webkit-scrollbar { display:none; }
-[data-screen][hidden],#event-empty[hidden],#show-all-events[hidden] { display:none !important; }
+[data-screen][hidden],#survey-screen[hidden],#recommendations[hidden],.app-tabbar[hidden],#event-empty[hidden],#show-all-events[hidden] { display:none !important; }
+.survey-screen { padding:30px 22px 28px; background:#fffefa; }
+.survey-screen h1 { margin:10px 0 10px; font-size:39px; line-height:1.06; letter-spacing:-1.8px; }
+.survey-screen h1 em { color:#438459; font-style:normal; }
+.survey-lead { max-width:370px; color:#647768; font-size:13px; line-height:1.5; }
+.survey-screen fieldset { min-width:0; margin:25px 0 0; padding:0; border:0; }
+.survey-screen legend { display:flex; align-items:center; gap:9px; padding:0; font-family:Outfit,sans-serif; font-size:19px; font-weight:700; }
+.survey-screen legend span { display:grid; place-items:center; width:26px; height:26px; border-radius:50%; background:#e4f2d8; color:var(--green); font:800 12px 'DM Sans',sans-serif; }
+.survey-screen fieldset>p { margin:7px 0 10px; color:#859587; font-size:11px; }
+.survey-options { display:grid; gap:8px; margin-top:12px; }
+.survey-interests { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.survey-options label { position:relative; display:block; min-width:0; cursor:pointer; }
+.survey-options input { position:absolute; width:1px; height:1px; opacity:0; }
+.survey-options label span { display:block; min-height:45px; padding:12px 11px; border:1px solid #d7e4d4; border-radius:12px; background:white; color:#345343; font-size:12px; font-weight:800; }
+.survey-options input:checked+span { border-color:var(--green); background:#e8f2dd; color:var(--green); box-shadow:inset 0 0 0 1px var(--green); }
+.survey-options input:focus-visible+span { outline:3px solid #8aba62; outline-offset:2px; }
+.survey-error { min-height:16px; margin:15px 0 5px; color:#b04b35; font-size:11px; font-weight:700; }
+.survey-submit { width:100%; }
+.survey-skip { display:block; width:100%; margin-top:10px; padding:10px; border:0; background:transparent; color:var(--green); font-size:12px; font-weight:800; }
+.survey-privacy { margin:17px 0 0; color:#829183; font-size:10px; line-height:1.5; text-align:center; }
+.preferences-button { margin-top:12px; padding:0; border:0; background:transparent; color:var(--green); font-size:11px; font-weight:800; text-decoration:underline; text-underline-offset:3px; }
+.recommendations { margin-bottom:23px; padding:16px; border:1px solid #cfe1c5; border-radius:18px; background:#f0f7e9; }
+.recommendations-heading { display:flex; align-items:end; justify-content:space-between; gap:10px; }
+.recommendations-heading h2 { margin:4px 0 0; font-size:23px; letter-spacing:-.6px; }
+.recommendations-heading button { padding:5px 0; border:0; background:transparent; color:var(--green); font-size:11px; font-weight:800; text-decoration:underline; }
+.recommendations>p { margin:8px 0 12px; color:#617763; font-size:11px; line-height:1.5; }
+.recommendation-list { display:grid; gap:9px; }
+.recommendation-card { padding:12px; border:1px solid #dae8d5; border-radius:13px; background:white; }
+.recommendation-why { color:#4c8a4e; font-size:9px; font-weight:800; letter-spacing:.7px; text-transform:uppercase; }
+.recommendation-card h3 { margin:5px 0 5px; font-size:15px; line-height:1.2; }
+.recommendation-card p { margin:2px 0; color:#68806d; font-size:11px; line-height:1.35; }
+.recommendation-card a,.recommended-clubs a { display:block; margin-top:8px; color:var(--green); font-size:11px; font-weight:800; text-decoration:underline; text-underline-offset:2px; }
+.recommended-clubs { padding:9px 2px 0; }
+.recommended-clubs h3 { margin:0 0 7px; font-size:15px; }
+.recommended-clubs a { margin:6px 0; }
 .calendar-intro { padding:27px 22px 22px; background:#fffefa; }
 .calendar-intro h1 { margin:10px 0 7px; font-size:39px; line-height:1.05; letter-spacing:-1.8px; }
 .calendar-intro h1 em { color:#438459; font-style:normal; }
@@ -152,6 +186,10 @@ dialog::backdrop { background:rgba(15,43,26,.55); }
 .busy-item button { border:0; background:none; color:#a66657; font-size:22px; }
 .no-busy-times { color:#849486; font-size:11px; }
 @media (min-width:501px) {
+  .survey-screen { padding:38px 32px 34px; }
+  .survey-screen h1 { font-size:49px; }
+  .survey-lead { font-size:15px; }
+  .survey-options label span { font-size:14px; }
   .app-header { height:72px; padding:0 32px; }
   .brand { font-size:27px; }
   .brand-mark { width:33px; height:33px; font-size:27px; }
